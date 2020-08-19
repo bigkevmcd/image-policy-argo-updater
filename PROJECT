@@ -1,0 +1,11 @@
+domain: bigkevmcd.com
+layout: go.kubebuilder.io/v2
+projectName: image-policy-argo-updater
+repo: github.com/bigkevmcd/image-policy-argo-updater
+resources:
+- group: apps
+  kind: ImagePolicyArgoCDUpdate
+  version: v1alpha1
+version: 3-alpha
+plugins:
+  go.sdk.operatorframework.io/v2-alpha: {}

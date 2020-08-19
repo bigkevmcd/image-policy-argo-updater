@@ -1,0 +1,7 @@
+apiVersion: apps.bigkevmcd.com/v1alpha1
+kind: ImagePolicyArgoCDUpdate
+metadata:
+  name: imagepolicyargocdupdate-sample
+spec:
+  # Add fields here
+  foo: bar
