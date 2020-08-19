@@ -5,5 +5,6 @@ metadata:
 spec:
   applicationRef:
     name: go-demo-application
+    namespace: argocd
   imagePolicyRef:
     name: app-policy

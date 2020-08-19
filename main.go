@@ -1,6 +1,4 @@
 /*
-
-
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -27,8 +25,10 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
+	argov1alpha1 "github.com/argoproj/argo-cd/pkg/apis/application/v1alpha1"
 	appsv1alpha1 "github.com/bigkevmcd/image-policy-argo-updater/api/v1alpha1"
 	"github.com/bigkevmcd/image-policy-argo-updater/controllers"
+	imagev1alpha1 "github.com/fluxcd/image-reflector-controller/api/v1alpha1"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -39,8 +39,9 @@ var (
 
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
-
+	utilruntime.Must(imagev1alpha1.AddToScheme(scheme))
 	utilruntime.Must(appsv1alpha1.AddToScheme(scheme))
+	utilruntime.Must(argov1alpha1.AddToScheme(scheme))
 	// +kubebuilder:scaffold:scheme
 }
 
