@@ -1,0 +1,6 @@
+apiVersion: image.toolkit.fluxcd.io/v1alpha1
+kind: ImageRepository
+metadata:
+  name: app-image
+spec:
+  image: bigkevmcd/go-demo

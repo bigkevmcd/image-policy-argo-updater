@@ -1,0 +1,9 @@
+apiVersion: apps.bigkevmcd.com/v1alpha1
+kind: ImagePolicyArgoCDUpdate
+metadata:
+  name: imagepolicyargocdupdate-sample
+spec:
+  applicationRef:
+    name: go-demo-application
+  imagePolicyRef:
+    name: app-policy
