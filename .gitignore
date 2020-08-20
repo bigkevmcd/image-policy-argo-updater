@@ -1,3 +1,4 @@
+controllers/testdata/crds/*
 
 # Binaries for programs and plugins
 *.exe

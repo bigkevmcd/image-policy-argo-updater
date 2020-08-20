@@ -23,10 +23,12 @@ else
 GOBIN=$(shell go env GOBIN)
 endif
 
+TEST_CRDS:=controllers/testdata/crds
+
 all: manager
 
 # Run tests
-test: generate fmt vet manifests
+test: test_deps generate fmt vet manifests
 	go test ./... -coverprofile cover.out
 
 # Build manager binary
@@ -118,3 +120,19 @@ bundle: manifests
 .PHONY: bundle-build
 bundle-build:
 	docker build -f bundle.Dockerfile -t $(BUNDLE_IMG) .
+
+# Running the tests requires the installation of an ArgoCD CRD and Flux V2 CRD.
+test_deps: ${TEST_CRDS}/imagepolicies.yaml ${TEST_CRDS}/application-crd.yaml
+
+clean_test_deps:
+	rm -r ${TEST_CRDS}
+
+${TEST_CRDS}/imagepolicies.yaml:
+	mkdir -p ${TEST_CRDS}
+	curl -s https://raw.githubusercontent.com/fluxcd/image-reflector-controller/main/config/crd/bases/image.toolkit.fluxcd.io_imagepolicies.yaml \
+	-o ${TEST_CRDS}/imagepolicies.yaml
+
+${TEST_CRDS}/application-crd.yaml:
+	mkdir -p ${TEST_CRDS}
+	curl -s https://raw.githubusercontent.com/argoproj/argo-cd/master/manifests/crds/application-crd.yaml \
+	-o ${TEST_CRDS}/application-crd.yaml

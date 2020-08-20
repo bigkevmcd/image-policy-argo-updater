@@ -52,6 +52,8 @@ func (r *ImagePolicyArgoCDUpdateReconciler) Reconcile(req ctrl.Request) (ctrl.Re
 
 	var update appsv1alpha1.ImagePolicyArgoCDUpdate
 	if err := r.Get(ctx, req.NamespacedName, &update); err != nil {
+		// This ignores NotFound errors because retrying is unlikely to fix the
+		// problem.
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 	logger.info("loaded the updater", "update", update)
@@ -59,23 +61,54 @@ func (r *ImagePolicyArgoCDUpdateReconciler) Reconcile(req ctrl.Request) (ctrl.Re
 	argoApp, err := r.loadApplication(ctx, update.Spec.ApplicationRef)
 	if err != nil {
 		logger.error(err, "referenced application does not exist")
+		// This ignores NotFound errors because retrying is unlikely to fix the
+		// problem.
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 	logger.info("loaded the application", "argoApp", argoApp)
 
+	policy, err := r.loadImagePolicy(ctx, update.Namespace, update.Spec.ImagePolicyRef)
+	if err != nil {
+		logger.error(err, "referenced image policy does not exist")
+		// This ignores NotFound errors because retrying is unlikely to fix the
+		// problem.
+		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
+	logger.info("loaded the image policy", "policy", policy)
+
+	if argoApp.Spec.Source.Kustomize == nil {
+		argoApp.Spec.Source.Kustomize = &argov1alpha1.ApplicationSourceKustomize{}
+	}
+	argoApp.Spec.Source.Kustomize.Images = argov1alpha1.KustomizeImages{argov1alpha1.KustomizeImage(policy.Status.LatestImage)}
+	if err := r.Update(ctx, argoApp); err != nil {
+		logger.error(err, "failed to update the ArgoCD Application")
+		return ctrl.Result{}, err
+	}
 	return ctrl.Result{}, nil
 }
 
 func (r *ImagePolicyArgoCDUpdateReconciler) loadApplication(ctx context.Context, ref corev1.ObjectReference) (*argov1alpha1.Application, error) {
-	var argoApp *argov1alpha1.Application
+	var argoApp argov1alpha1.Application
 	appName := types.NamespacedName{
 		Name:      ref.Name,
 		Namespace: ref.Namespace,
 	}
-	if err := r.Get(ctx, appName, argoApp); err != nil {
+	if err := r.Get(ctx, appName, &argoApp); err != nil {
 		return nil, err
 	}
-	return argoApp, nil
+	return &argoApp, nil
+}
+
+func (r *ImagePolicyArgoCDUpdateReconciler) loadImagePolicy(ctx context.Context, ns string, ref corev1.LocalObjectReference) (*imagev1alpha1.ImagePolicy, error) {
+	var policy imagev1alpha1.ImagePolicy
+	name := types.NamespacedName{
+		Name:      ref.Name,
+		Namespace: ns,
+	}
+	if err := r.Get(ctx, name, &policy); err != nil {
+		return nil, err
+	}
+	return &policy, nil
 }
 
 func (r *ImagePolicyArgoCDUpdateReconciler) SetupWithManager(mgr ctrl.Manager) error {
