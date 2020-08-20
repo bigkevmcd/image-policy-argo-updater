@@ -20,6 +20,7 @@ import (
 	argov1alpha1 "github.com/argoproj/argo-cd/pkg/apis/application/v1alpha1"
 	imagev1alpha1 "github.com/fluxcd/image-reflector-controller/api/v1alpha1"
 	"github.com/go-logr/logr"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -47,36 +48,38 @@ type ImagePolicyArgoCDUpdateReconciler struct {
 func (r *ImagePolicyArgoCDUpdateReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	ctx := context.Background()
 	logger := newLogger(r.Log.WithValues("imagepolicyargocdupdate", req.NamespacedName))
-
 	logger.info("reconciling ImagePolicyArgoCDUpdate", "req", req)
 
 	var update appsv1alpha1.ImagePolicyArgoCDUpdate
 	if err := r.Get(ctx, req.NamespacedName, &update); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
-
 	logger.info("loaded the updater", "update", update)
 
-	var argoApp argov1alpha1.Application
-	appName := types.NamespacedName{
-		Name:      update.Spec.ApplicationRef.Name,
-		Namespace: update.Spec.ApplicationRef.Namespace,
+	argoApp, err := r.loadApplication(ctx, update.Spec.ApplicationRef)
+	if err != nil {
+		logger.error(err, "referenced application does not exist")
+		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
-	if err := r.Get(ctx, appName, &argoApp); err != nil {
-		if client.IgnoreNotFound(err) == nil {
-			logger.error(err, "referenced application does not exist")
-			return ctrl.Result{}, nil
-		}
-		return ctrl.Result{}, err
-	}
-
 	logger.info("loaded the application", "argoApp", argoApp)
 
 	return ctrl.Result{}, nil
 }
 
+func (r *ImagePolicyArgoCDUpdateReconciler) loadApplication(ctx context.Context, ref corev1.ObjectReference) (*argov1alpha1.Application, error) {
+	var argoApp *argov1alpha1.Application
+	appName := types.NamespacedName{
+		Name:      ref.Name,
+		Namespace: ref.Namespace,
+	}
+	if err := r.Get(ctx, appName, argoApp); err != nil {
+		return nil, err
+	}
+	return argoApp, nil
+}
+
 func (r *ImagePolicyArgoCDUpdateReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	// Index the Image Policy (if any) that each ArgoCD Update refers to
+	// Index the ImagePolicy that each ArgoCD Update references
 	if err := mgr.GetFieldIndexer().IndexField(&appsv1alpha1.ImagePolicyArgoCDUpdate{}, imagePolicyKey, func(obj runtime.Object) []string {
 		updater := obj.(*appsv1alpha1.ImagePolicyArgoCDUpdate)
 		return []string{updater.Spec.ImagePolicyRef.Name}

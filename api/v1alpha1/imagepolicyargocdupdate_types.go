@@ -21,8 +21,8 @@ import (
 
 // ImagePolicyArgoCDUpdateSpec defines the desired state of ImagePolicyArgoCDUpdate
 type ImagePolicyArgoCDUpdateSpec struct {
-	ApplicationRef corev1.ObjectReference       `json:"applicationRef"`
-	ImagePolicyRef *corev1.LocalObjectReference `json:"imagePolicyRef"`
+	ApplicationRef corev1.ObjectReference      `json:"applicationRef"`
+	ImagePolicyRef corev1.LocalObjectReference `json:"imagePolicyRef"`
 }
 
 // ImagePolicyArgoCDUpdateStatus defines the observed state of ImagePolicyArgoCDUpdate
