@@ -29,6 +29,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	appsv1alpha1 "github.com/bigkevmcd/image-policy-argo-updater/api/v1alpha1"
+	"github.com/bigkevmcd/image-policy-argo-updater/pkg/update"
 )
 
 const applicationKey = ".spec.application"
@@ -50,15 +51,15 @@ func (r *ImagePolicyArgoCDUpdateReconciler) Reconcile(req ctrl.Request) (ctrl.Re
 	logger := newLogger(r.Log.WithValues("imagepolicyargocdupdate", req.NamespacedName))
 	logger.info("reconciling ImagePolicyArgoCDUpdate", "req", req)
 
-	var update appsv1alpha1.ImagePolicyArgoCDUpdate
-	if err := r.Get(ctx, req.NamespacedName, &update); err != nil {
+	var policy appsv1alpha1.ImagePolicyArgoCDUpdate
+	if err := r.Get(ctx, req.NamespacedName, &policy); err != nil {
 		// This ignores NotFound errors because retrying is unlikely to fix the
 		// problem.
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
-	logger.info("loaded the updater", "update", update)
+	logger.info("loaded the update policy", "policy", policy.Name)
 
-	argoApp, err := r.loadApplication(ctx, update.Spec.ApplicationRef)
+	argoApp, err := r.loadApplication(ctx, policy.Spec.ApplicationRef)
 	if err != nil {
 		logger.error(err, "referenced application does not exist")
 		// This ignores NotFound errors because retrying is unlikely to fix the
@@ -67,23 +68,24 @@ func (r *ImagePolicyArgoCDUpdateReconciler) Reconcile(req ctrl.Request) (ctrl.Re
 	}
 	logger.info("loaded the application", "argoApp", argoApp)
 
-	policy, err := r.loadImagePolicy(ctx, update.Namespace, update.Spec.ImagePolicyRef)
+	imagePolicy, err := r.loadImagePolicy(ctx, policy.Namespace, policy.Spec.ImagePolicyRef)
 	if err != nil {
 		logger.error(err, "referenced image policy does not exist")
 		// This ignores NotFound errors because retrying is unlikely to fix the
 		// problem.
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
-	logger.info("loaded the image policy", "policy", policy)
+	logger.info("loaded the image policy", "imagePolicy", imagePolicy.Name)
 
 	if argoApp.Spec.Source.Kustomize == nil {
 		argoApp.Spec.Source.Kustomize = &argov1alpha1.ApplicationSourceKustomize{}
 	}
-	argoApp.Spec.Source.Kustomize.Images = argov1alpha1.KustomizeImages{argov1alpha1.KustomizeImage(policy.Status.LatestImage)}
+	update.OverrideImage(argoApp, argov1alpha1.KustomizeImage(imagePolicy.Status.LatestImage))
 	if err := r.Update(ctx, argoApp); err != nil {
 		logger.error(err, "failed to update the ArgoCD Application")
 		return ctrl.Result{}, err
 	}
+	logger.info("updated the ArgoCD application", "newImage", imagePolicy.Status.LatestImage)
 	return ctrl.Result{}, nil
 }
 
