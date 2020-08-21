@@ -8,7 +8,7 @@ automatically, tracking updates to the available image in a repository.
 Install some prerequisites:
 
 ```shell
-$ kubectl apply -k github.com/fluxcd/image-reflector-controller/config/default
+$ kustomize build github.com/fluxcd/image-reflector-controller/config/default | kubectl apply -f -
 ```
 
 ## Testing locally
