@@ -9,7 +9,6 @@ Install some prerequisites:
 
 ```shell
 $ kubectl apply -k github.com/fluxcd/image-reflector-controller/config/default
-$ kubectl apply -k github.com/fluxcd/image-automation-controller/config/default
 ```
 
 ## Testing locally
