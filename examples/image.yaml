@@ -4,3 +4,4 @@ metadata:
   name: app-image
 spec:
   image: bigkevmcd/go-demo
+  scanInterval: 1m
