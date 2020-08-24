@@ -1,10 +1,10 @@
 apiVersion: image.toolkit.fluxcd.io/v1alpha1
 kind: ImagePolicy
 metadata:
-  name: app-policy
+  name: go-demo-policy
 spec:
   imageRepositoryRef:
-    name: app-image
+    name: go-demo-image
   policy:
     semver:
       range: 0.0.x

@@ -1,7 +1,7 @@
 apiVersion: image.toolkit.fluxcd.io/v1alpha1
 kind: ImageRepository
 metadata:
-  name: app-image
+  name: go-demo-image
 spec:
   image: bigkevmcd/go-demo
   scanInterval: 1m

@@ -14,7 +14,7 @@ $ kustomize build github.com/fluxcd/image-reflector-controller/config/default | 
 Then install this controller.
 
 ```shell
-$ kubectl apply -k config/default
+$ kustomize build config/default | kubectl apply -f -
 ```
 
 ## Testing locally
