@@ -32,5 +32,15 @@ rules:
   - applications
   verbs:
   - get
+  - list
   - patch
   - update
+  - watch
+- apiGroups:
+  - image.toolkit.fluxcd.io
+  resources:
+  - imagepolicies
+  verbs:
+  - get
+  - list
+  - watch

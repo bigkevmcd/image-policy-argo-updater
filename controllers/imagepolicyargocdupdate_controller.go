@@ -44,7 +44,8 @@ type ImagePolicyArgoCDUpdateReconciler struct {
 
 // +kubebuilder:rbac:groups=apps.bigkevmcd.com,resources=imagepolicyargocdupdates,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=apps.bigkevmcd.com,resources=imagepolicyargocdupdates/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=argoproj.io,resources=applications,verbs=get;update;patch
+// +kubebuilder:rbac:groups=argoproj.io,resources=applications,verbs=get;patch;list;watch;update
+// +kubebuilder:rbac:groups=image.toolkit.fluxcd.io,resources=imagepolicies,verbs=get;list;watch
 
 func (r *ImagePolicyArgoCDUpdateReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	ctx := context.Background()

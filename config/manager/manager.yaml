@@ -1,5 +1,5 @@
-appiVersion: v1
-kpind: Namespace
+apiVersion: v1
+kind: Namespace
 metadata:
   labels:
     control-plane: controller-manager
